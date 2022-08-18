@@ -1,0 +1,2158 @@
+##########################################
+#    HyperSnips snippets for LaTeX       #
+#                                        #
+#       2022/08/013   @洛白              #
+#                     @方程              #
+##########################################
+
+#### Index - 索引 ####
+
+# Global Function - 全局函数
+# Special snippets - 特殊片段
+# Math Notation - 数学符号
+# Greek letter - 希腊字母
+# Matrices - 矩阵
+# Fraction - 分式
+# Superscript & subscript - 上下标
+# Prefix Mode - 前缀模式
+# Unit Mode - 单位模式
+# Other Environment - 其他环境
+# Transform similar notations - 箭头
+# Specific Courses - 特定学科
+# Misc - 杂项
+# Custom - 个性化
+
+
+##########################################################
+#                    Global Function                     #
+##########################################################
+global
+// paltform
+       const os = require('os')
+       const platform = os.platform()
+// vscode api (necessary)
+         /**
+        * @param {vscode.ExtensionContext} context
+         */
+        const vscode = require("vscode");
+        let editor=vscode.window.activeTextEditor
+        let document=editor.document
+
+
+        // get ActiveTextEditor
+
+        vscode.window.onDidChangeActiveTextEditor((e) => {
+            editor=vscode.window.activeTextEditor;
+            document=editor.document
+        });
+
+
+// selected text : use ``rv=visual();`` to get selected text
+
+    let selectedText = "";
+    vscode.window.onDidChangeTextEditorSelection((e) => {
+        const newSelectedText = e.textEditor.document.getText(e.selections[0]);
+        if (newSelectedText) {
+            selectedText = newSelectedText;
+        }
+    });
+
+    function visual(){
+        const visualText = selectedText;
+        selectedText = "";
+        return visualText;
+    }
+
+     function gen_matrix(snip, flag, nrow, ncol, index) {
+        addPackage('amsmath')
+    	let results = "\\\\begin{"+`${flag?flag:''}`+"matrix}";
+    	let order = 1;
+        let lf = index ? "\n" : "";
+    	for (let i=0; i<nrow; i++){
+            results += (lf + "  ");
+    		for(let j = 0;j <ncol;j++){
+    			results += `${snip.tabstop(order)}` + ((j == ncol -1) ?  " \\\\\\\\" : " & ");
+    			order ++;
+    		}
+    	}
+    	return results += (lf +"\\\\end{"+`${flag?flag:''}`+"matrix}");
+    }
+
+    // add package
+
+    function addPackage(package){
+        let range = new vscode.Range(new vscode.Position(0, 0), editor.selection.active)
+        let text = editor.document.getText(range);
+        if (text.indexOf(package)== -1){
+            vscode.window.showInformationMessage(`未检测到 \'${package}\' 包引入，是否立即要引入此包？`, '是', '否').then(result => {
+	        if (result === '是') {
+                    vscode.window.activeTextEditor.edit(editBuilder => {
+                        if (editor.document.getText(range).indexOf(package) === -1)
+                            editBuilder.insert(new vscode.Position(1, 0), `\\usepackage{${package}}\n`);
+                    });
+	            }
+            });
+        }
+    }
+
+ // Context definition
+
+    // math
+
+        function math(context) {
+            return context.scopes.some(s => s.includes("math"));
+        }
+
+    // inline & block math
+
+        function inline_math(context){
+            return context.scopes.some(s => s.includes("math")) && !context.scopes.some(s => s.includes("math.block.environment"));
+        }
+
+        function block_math(context){
+            return context.scopes.some(s => s.includes("math.block.environment")) ;
+        }
+
+    // {aligned} environment
+
+        function isAlignedEnvironment(editor) {
+            let text = editor.document.getText(new vscode.Range(new vscode.Position(0, 0), editor.selection.start));
+            const reg = /\\begin\{aligned\}[^\$]*?\\end\{aligned\}/g;
+            text = text.replace(reg, '');
+            return (text.indexOf('\\begin{aligned}') == -1)?false:true;
+        }
+     
+
+    // Unit Environment
+
+        function isUnitMode(editor) {
+            let pos = editor.selection.active;
+            const reg = /\\mathrm\{\\,[^\$]*?\}/g;
+            let text = editor.document.getText(new vscode.Range(pos.line,0,pos.line,pos.character)).replace(reg, '');
+            return (text.indexOf('\\mathrm{\\,') != -1)
+        }
+
+     // Is Environment  $$ $$ 不是才返回1  
+         function isMathOk(editor) {
+            let pos = editor.selection.active;
+            let text = editor.document.getText(new vscode.Range(pos.line,0,pos.line,pos.character));
+            return (text.indexOf('\$\$') != -1)
+        }
+        // 是不是我们自定义的块
+        function isBlock(editor) {
+            let pos = editor.selection.active;
+            let text = editor.document.getText(new vscode.Range(pos.line,0,pos.line,pos.character));
+            return (text.indexOf('/') != -1)
+        }
+        function iscode_inline(editor) {
+            let pos = editor.selection.active;
+            let text = editor.document.getText(new vscode.Range(pos.line,0,pos.line,pos.character));
+            return (text.indexOf('``') != -1)&&(text.indexOf('```') == -1)
+        }
+        function iscode(editor) {
+            let pos = editor.selection.active;
+            let text = editor.document.getText(new vscode.Range(pos.line,0,pos.line,pos.character));
+            return (text.indexOf('``') != -1)&&(text.indexOf('```') != -1)
+        }
+//----------------------------------------Function_GET------------------------------------
+//function GetTitle()
+// Dic
+//----------------------------------------TEST模块----------------------------------------
+ setInterval(function(){myTimer()},1000);
+        function myTimer(){
+       // vscode.window.setStatusBarMessage(new Date().toLocaleTimeString());
+       vscode.window.setStatusBarMessage( e.textEditor.document.getText(e.selections[0]).toStiring());
+}
+//----------------------------------------TEST模块----------------------------------------
+    // Greek Letter
+        const greek  = {
+            "a" : "\\alpha",
+            "b" : "\\beta",
+            "c" : "\\chi",
+            "d" : "\\delta",
+            "e" : "\\epsilon",
+            "ve": "\\varepsilon",
+            "f" : "\\phi",
+            "vf" : "\\varphi",
+            "g" : "\\gamma",
+            "h" : "\\eta",
+            "i" : "\\iota",
+            "j" : "\\varphi",
+            "k" : "\\kappa",
+            "vk": "\\varkappa",
+            "l" : "\\lambda",
+            "m" : "\\mu",
+            "n" : "\\nu",
+            "o" : "\\omicron",
+            "p" : "\\pi",
+            "vp" : "\\varpi",
+            "q" : "\\theta",
+            "vq" : "\\vartheta",
+            "r" : "\\rho",
+            "s" : "\\sigma",
+            "vs" : "\\varsigma",
+            "t" : "\\tau",
+            "u" : "\\upsilon",
+            "v" : "\\varpi",
+            "w" : "\\omega",
+            "x" : "\\xi",
+            "y" : "\\psi",
+            "z" : "\\zeta",
+            "A" : "\\Alpha",
+            "B" : "\\Beta",
+            "C" : "\\Chi",
+            "D" : "\\Delta",
+            "E" : "\\Epsilon",
+            "F" : "\\Phi",
+            "G" : "\\Gamma",
+            "H" : "\\Eta",
+            "I" : "\\Iota",
+            "K" : "\\Kappa",
+            "L" : "\\Lambda",
+            "M" : "\\Mu",
+            "N" : "\\Nu",
+            "O" : "\\Omicron",
+            "P" : "\\Pi",
+            "Q" : "\\Theta",
+            "R" : "\\Rho",
+            "S" : "\\Sigma",
+            "T" : "\\Tau",
+            "U" : "\\Upsilon",
+            "W" : "\\Omega",
+            "X" : "\\Xi",
+            "Y" : "\\Psi",
+            "Z" : "\\Zeta"
+        };
+
+    // prefix
+
+    const prefix = {
+        "bar" : ["\\\\overline{"             ,"}"   ],
+        "fn"  : ["\\\\overset{\\\\frown}{"   ,"}"   ],
+        "td"  : ["\\\\widetilde{"            ,"}"   ],
+        "rm"  : ["\\\\mathrm{"               ,"}"   ],
+        "hat" : ["\\\\hat{"                  ,"}"   ],
+        "cr"  : ["\\\\mathscr{"              ,"}"   ],
+        "bav" : ["\\\\hat{\\\\boldsymbol{"   ,"}}"  ],
+        "vec" : ["\\\\vec{"                  ,"}"   ],
+        "bm"  : ["\\\\boldsymbol{"           ,"}"   ],
+        "bf"  : ["\\\\mathbf{"               ,"}"   ],
+        "cal" : ["\\\\mathcal{"              ,"}"   ],
+        "dot"  : ["\\\\dot{"                  ,"}"   ],
+        "vdot" : ["\\\\dot{\\\\boldsymbol{"   ,"}}"  ]
+    }
+
+    //  block
+
+
+    const block = {
+        "tm" : ["Thm"        ,"brown"  ,"▶",0],
+        "tt" : ["Thm"        ,"brown"  ,"▶",1],
+        "ex" : ["Ex"         ,"teal"   ,"▶",0],
+        "pf" : ["Pf"         ,"green"  ,"▶",0],
+        "pb" : ["Problem"    ,"teal"   ,"▶",0],
+        "sn" : ["Sol"        ,"green"  ,"▶",0],
+        "df" : ["Def"        ,"purple" ,"▶",0],
+        "dd" : ["Def"        ,"purple" ,"▶",1],
+        "st" : ["Step"       ,"orange" ,"▶",0],
+        "md" : ["Method"     ,"brown"  ,"■",0],
+        "cc" : ["Case"       ,"brown"  ,"●",0],
+        "ds" : ["Discussion" ,"brown"  ,"■",0],
+    }
+
+    const arrow = {
+        'r' : 'right',
+        'R' : 'Right',
+        'l' : 'left',
+        'L' : 'Left',
+        'lr':'leftright',
+        'Lr':'Leftright',
+        'u' : 'up',
+        'U' : 'Up',
+        'd' : 'down',
+        'D': 'Down',
+        'ud':'updown',
+        'Ud':'Updown',
+        'rr': 'longright',
+        'll': 'longleft',
+        'RR': 'Longright',
+        'LL': 'Longleft',
+        'se': 'se',
+        'sw': 'sw',
+        'ne': 'ne',
+        'nw': 'nw'
+    }
+
+///////////////////// trash  ////////////////////
+
+
+// autoclosing environment
+
+function autoclosing(){
+    let pos=editor.selection.active;
+    let text = document.getText(document.lineAt(pos).range).charAt(pos.character+1);
+    let reg=/[;:.,=\}\]\)>\\` \n\t\$*\|\\]/g;
+    return reg.test(text) || text==""
+}
+//---------------------------------【数学公式求解】-------------------------------
+// 自己设置一下快捷键，绑定命令
+//---------------------------------【数学公式求解】-------------------------------
+endglobal   
+#----------------------------------------------------------------------------------------------
+#### Initialization page
+# /init : Auto load default settings
+
+context !math(context)
+snippet /init1 "[单栏][文章]" iA
+% ctexart、ctexrep、ctexbook和ctexbeamer, 对应 LaTeX 的article、report、book和beamer
+\documentclass{article}
+\usepackage[UTF8]{ctex}
+\usepackage[a4paper,left=3cm,right=3cm,top=2.6cm,bottom=2.6cm]{geometry} % 设置页面尺寸
+\usepackage{fancyhdr} % 设置页眉页边页脚
+\usepackage{multicol} % 多栏排版
+\usepackage{xeCJK} % 中文支持
+\usepackage{ctex} % 中文支持
+\usepackage{footmisc} % 控制脚注格式，包括编号、字体、分隔线等
+\usepackage{titletoc} % 定制目录列表样式
+\usepackage{fontspec} % XeTeX下的字体选择宏包
+\usepackage{setspace} % 行距
+\usepackage{graphicx} % 插图
+\usepackage{pdfpages} % 引用pdf页面
+\usepackage{booktabs} % 三线表
+\usepackage{multirow} % 表格多行支持
+\usepackage{caption} % figure和table等中的说明文字
+\usepackage{tikz} % 绘图
+\usepackage{etoolbox} % 给宏包打补丁
+\usepackage{hyperref} % 超链接
+\usepackage{xcolor} % 颜色支持
+\usepackage{array} % 数学表格
+\usepackage{amsmath} % 数学公式
+\usepackage{amssymb} % 数学字体与符号
+\usepackage{amsthm} % 数学定理格式
+\usepackage{subfig} % 排版子图
+\usepackage{float} % 浮动体格式控制
+\usepackage{lmodern} % 一种字体支持
+\usepackage{listings} % 插入代码
+\usepackage{tcolorbox} % 好看的块环境
+\usepackage{pifont} % 字体支持
+\usepackage{perpage} %the perpage package
+\usepackage{mathdesign} % some math fonts
+\usepackage{ulem} %一些文字强调的宏包
+\usepackage{fancyvrb} % some fancy verbatim 
+\usepackage{enumitem} % 列表项目
+\usepackage{txfonts} % 一些字体
+%重置每页脚注序号
+\MakePerPage{footnote} %the perpage package command
+\renewcommand \thefootnote{\ding{\numexpr171+\value{footnote}}}
+\pagestyle{headings} 
+% 为tcolorbox导入三个程序包
+\tcbuselibrary{skins, breakable, theorems} 
+
+% 设置代码格式 - 关键字加粗, 其余为正常。非彩色
+\lstset{
+    aboveskip=5mm,
+    belowskip=5mm,
+    breaklines=true,
+    breakatwhitespace=true,
+    columns=flexible,
+    extendedchars=false,
+    showstringspaces=false,
+    numbers=none,
+    basicstyle={\small\ttfamily},
+    captionpos=t,
+    frame=tb,
+    tabsize=4
+}
+
+\lstdefinestyle{cpp} {
+  language=C++
+}
+
+\lstdefinestyle{c++} {
+  language=C++
+}
+
+\lstdefinestyle{python} {
+  language=python,
+  morekeywords={as}
+}
+
+% 西文字体格式
+\setromanfont{Times New Roman}
+
+% 为目录添加 PDF 链接
+\addtocontents{toc}{\protect\hypersetup{hidelinks}}
+
+% 设置「目录」二字格式
+\renewcommand{\contentsname}{
+  \fontsize{16pt}{\baselineskip}
+  \normalfont\heiti{目~~~~录}
+  \vspace{-8pt}
+}
+
+% 定理、定义、证明
+\newtheorem{theorem}{定理}[section]
+\newtheorem{definition}{定义}[section]
+\newtheorem{lemma}{引理}[section]
+\newtheorem{corollary}{推论}[section]
+\newtheorem{example}{例}
+\newtheorem{proposition}{命题}[section]
+
+\title{题目}
+\author{作者}
+\date{\today}
+
+\begin{document}
+
+% 显示标题作者时间
+\maketitle
+\newpage
+
+% 调整目录行间距
+\renewcommand{\baselinestretch}{1.35}
+% 添加目录
+\tableofcontents
+\newpage
+
+% 正文 22 磅的行距
+\setlength{\parskip}{0em}
+\renewcommand{\baselinestretch}{1.53}
+
+
+\section{第一个标题}
+
+
+\end{document}
+
+endsnippet
+priority  999
+context !math(context)
+snippet /init2 "[双栏][文章]" iA
+\documentclass[twocolumn]{ctexart}
+% ctexart、ctexrep、ctexbook和ctexbeamer, 对应 LaTeX 的article、report、book和beamer
+\usepackage[a4paper,left=3cm,right=3cm,top=2.6cm,bottom=2.6cm]{geometry} % 设置页面尺寸
+\usepackage{fancyhdr} % 设置页眉页边页脚
+\usepackage{multicol} % 多栏排版
+\usepackage{xeCJK} % 中文支持
+\usepackage{ctex} % 中文支持
+\usepackage{footmisc} % 控制脚注格式，包括编号、字体、分隔线等
+\usepackage{titletoc} % 定制目录列表样式
+\usepackage{fontspec} % XeTeX下的字体选择宏包
+\usepackage{setspace} % 行距
+\usepackage{graphicx} % 插图
+\usepackage{pdfpages} % 引用pdf页面
+\usepackage{booktabs} % 三线表
+\usepackage{multirow} % 表格多行支持
+\usepackage{caption} % figure和table等中的说明文字
+\usepackage{tikz} % 绘图
+\usepackage{etoolbox} % 给宏包打补丁
+\usepackage{hyperref} % 超链接
+\usepackage{xcolor} % 颜色支持
+\usepackage{array} % 数学表格
+\usepackage{amsmath} % 数学公式
+\usepackage{amssymb} % 数学字体与符号
+\usepackage{amsthm} % 数学定理格式
+\usepackage{subfig} % 排版子图
+\usepackage{float} % 浮动体格式控制
+\usepackage{lmodern} % 一种字体支持
+\usepackage{listings} % 插入代码
+\usepackage{tcolorbox} % 好看的块环境
+\usepackage{pifont} % 字体支持
+\usepackage{perpage} %the perpage package
+\usepackage{mathdesign} % some math fonts
+\usepackage{ulem} %一些文字强调的宏包
+\usepackage{fancyvrb} % some fancy verbatim 
+\usepackage{enumitem} % 列表项目
+\usepackage{txfonts} % 一些字体
+%重置每页脚注序号
+\pagestyle{headings}
+\MakePerPage{footnote} %the perpage package command
+\renewcommand \thefootnote{\ding{\numexpr171+\value{footnote}}}
+% 为tcolorbox导入三个程序包
+\tcbuselibrary{skins, breakable, theorems} 
+
+% 设置代码格式 - 关键字加粗, 其余为正常。非彩色
+\lstset{
+    aboveskip=5mm,
+    belowskip=5mm,
+    breaklines=true,
+    breakatwhitespace=true,
+    columns=flexible,
+    extendedchars=false,
+    showstringspaces=false,
+    numbers=none,
+    basicstyle={\small\ttfamily},
+    captionpos=t,
+    frame=tb,
+    tabsize=4
+}
+
+\lstdefinestyle{cpp} {
+  language=C++
+}
+
+\lstdefinestyle{c++} {
+  language=C++
+}
+
+\lstdefinestyle{python} {
+  language=python,
+  morekeywords={as}
+}
+
+% 西文字体格式
+\setromanfont{Times New Roman}
+
+% 为目录添加 PDF 链接
+\addtocontents{toc}{\protect\hypersetup{hidelinks}}
+
+% 设置「目录」二字格式
+\renewcommand{\contentsname}{
+  \fontsize{16pt}{\baselineskip}
+  \normalfont\heiti{目~~~~录}
+  \vspace{-8pt}
+}
+
+% 定理、定义、证明
+\newtheorem{theorem}{定理}[section]
+\newtheorem{definition}{定义}[section]
+\newtheorem{lemma}{引理}[section]
+\newtheorem{corollary}{推论}[section]
+\newtheorem{example}{例}
+\newtheorem{proposition}{命题}[section]
+
+\title{题目}
+\author{作者}
+\date{\today}
+
+\begin{document}
+
+% 显示标题作者时间
+\maketitle
+\newpage
+
+% 调整目录行间距
+\renewcommand{\baselinestretch}{1.35}
+% 添加目录
+\tableofcontents
+\newpage
+
+% 正文 22 磅的行距
+\setlength{\parskip}{0em}
+\renewcommand{\baselinestretch}{1.53}
+
+
+\section{第一个标题}
+
+
+\end{document}
+endsnippet
+#----------------------------------------------------------------------------------------------
+priority 99999999
+context math(context)
+snippet `(?<=(oii|iii|ascc|mathtt|mathbb|hetan))` "prevent" iA
+
+endsnippet
+
+# \displaystyle in `inline-math`
+
+context inline_math(context)
+snippet `\$([^\$]*)/ds` "Displaystyle" iA
+``rv=`$\\\\displaystyle${m[1]? " "+m[1] : ""}```
+endsnippet
+
+# ￥ ⇨ $ $
+context !isMathOk(editor)
+snippet ￥ A
+\$$1\$
+endsnippet
+
+context !isMathOk(editor)
+snippet `([^ ]+)(\￥)` "$公式补全" A
+``rv =m[1]``\$$1\$
+endsnippet
+
+
+# $ ⇨ $ $
+# $$$⇨ $$$$
+context !isMathOk(editor)
+snippet $ A
+\$$1\$
+endsnippet
+
+context !isMathOk(editor)
+snippet `([^ ]+)(\$)` "$公式补全" A
+``rv =m[1]``\$$1\$
+endsnippet
+
+# equation environment
+
+# $DS$ ⇨  $\display$
+# /eq  ⇨  equation    
+# /eq* ⇨  equation*   
+# /[   ⇨  \[ \]        
+
+context isBlock(editor)
+snippet /eq "带编号的公式环境" i
+\\begin{equation}
+$1
+\\end{equation}
+endsnippet
+
+context isBlock(editor)
+snippet /eq* "不带编号的公式环境" i
+\\begin{equation*}
+$1
+\\end{equation*}
+endsnippet
+
+#=========================================[段落]=============================================
+#-----------------Title--------------------
+priority 1
+snippet `[\#] ([^ ]+) ` "一级标题" MA
+\section{``rv=m[1]``}
+endsnippet
+priority 2
+snippet `(\#\# )([^ ]+)([ ])` "二级标题" MA
+\subsection{``rv=m[2]``}
+endsnippet
+priority 3
+snippet `(\#\#\# )([^ ]+)([ ])` "三级标题" MA
+\subsubsection{``rv=m[2]``}
+endsnippet
+priority 4
+snippet `\#\#\#\# ([^ ]+) ` "段落" MA
+\paragraph{``rv=m[1]``}
+endsnippet
+priority 5
+snippet `\#\#\#\#\# ([^ ]+) ` "子段" MA
+\paragraph{``rv=m[1]``}
+endsnippet
+
+priority 1
+snippet `[\#1] ([^ ]+) ` "一级标题" MA
+\section{``rv=m[1]``}
+endsnippet
+priority 2
+snippet `(\#2 )([^ ]+)([ ])` "二级标题" MA
+\subsection{``rv=m[2]``}
+endsnippet
+priority 3
+snippet `(\#3)([^ ]+)([ ])` "三级标题" MA
+\subsubsection{``rv=m[2]``}
+endsnippet
+priority 4
+snippet `\#4 ([^ ]+) ` "段落" MA
+\paragraph{``rv=m[1]``}
+endsnippet
+priority 5
+snippet `\#5 ([^ ]+) ` "子段" MA
+\paragraph{``rv=m[1]``}
+endsnippet
+
+#-----------------Title--------------------
+
+#=========================================[段落]=============================================
+
+#=========================================[环境]=============================================
+#-----------------引用--------------------
+
+
+#### theorem defination lemma etc.
+context isBlock(editor)
+snippet /dingli "A theorem 一个定理" iMA
+\begin{theorem}
+$1
+\end{theorem}
+endsnippet
+
+context isBlock(editor)
+snippet /dingyi "A definition 一个定义" iMA
+\begin{definition}
+$1
+\end{definition}
+endsnippet
+
+context isBlock(editor)
+snippet /yinli "A lemma 一个引理" iMA
+\begin{lemma}
+$1
+\end{lemma}
+endsnippet
+
+context isBlock(editor)
+snippet /tuilun "A corollary 一个推论" iMA
+\begin{corollary}
+$1
+\end{corollary}
+endsnippet
+
+context isBlock(editor)
+snippet /lizi "A example 一个例子" iMA
+\begin{example}
+$1
+\end{example}
+endsnippet
+
+context isBlock(editor)
+snippet /mingti "A proposition 一个命题" iMA
+\begin{proposition}
+$1
+\end{proposition}
+endsnippet
+
+snippet >dingli "A theorem 一个定理" iMA
+\begin{theorem}
+$1
+\end{theorem}
+endsnippet
+
+snippet >dingyi "A definition 一个定义" iMA
+\begin{definition}
+$1
+\end{definition}
+endsnippet
+
+snippet >yinli "A lemma 一个引理" iMA
+\begin{lemma}
+$1
+\end{lemma}
+endsnippet
+
+snippet >tuilun "A corollary 一个推论" iMA
+\begin{corollary}
+$1
+\end{corollary}
+endsnippet
+
+snippet >lizi "A example 一个例子" iMA
+\begin{example}
+$1
+\end{example}
+endsnippet
+
+snippet >mingti "A proposition 一个命题" iMA
+\begin{proposition}
+$1
+\end{proposition}
+endsnippet
+# 
+snippet >tip "小提示" iMA
+\begin{quote}
+{\texttt{Tips:} \kaishu $1}
+\end{quote}
+endsnippet
+
+snippet > "引用格式" i
+\begin{quote}
+{\qquad\parindent2\ccwd\kaishu\zihao{5}
+$1
+}
+\end{quote}
+endsnippet
+
+snippet `> ` "引用格式" iMA
+\begin{quote}
+{\qquad\parindent2\ccwd\kaishu\zihao{5}
+$1
+}
+\end{quote}
+endsnippet
+#=========================================[环境]=============================================
+
+####  List - Itemize, Enumerate, and Description.
+priority 2
+context !math(context)
+snippet `\+ ` "无序列表" A
+\begin{itemize}
+\item $1
+\end{itemize}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `(\\item \+ )` "无序列表" A
+\begin{itemize}
+\item $1
+\end{itemize}
+endsnippet
+
+priority 2
+context !math(context)
+snippet `1. ` "有序列表" A
+\begin{enumerate}
+\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item 1. ` "有序列表" A
+\begin{enumerate}
+\item $1
+\end{enumerate}
+endsnippet
+
+priority 2
+context !math(context)
+snippet `- ` "有序列表" A
+\begin{enumerate}
+\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item - ` "有序列表" A
+\begin{enumerate}
+\item $1
+\end{enumerate}
+endsnippet
+
+priority 2
+context !math(context)
+snippet `\+box ` A
+\begin{enumerate}[label=\fbox{\arabic*},nosep] % nosep没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+box ` A
+\begin{enumerate}[label=\fbox{\arabic*},nosep] % nosep没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /listbox "盒子列表" iMA
+\begin{enumerate}[label=\fbox{\arabic*},nosep] % nosep没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 2
+context !math(context)
+snippet `\+... ` A
+\begin{description}[leftmargin=1.3cm,style=nextline,nosep]% nosep没有垂直间隔
+	\item[$1] $2
+\end{description}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+... ` A
+\begin{description}[leftmargin=1.3cm,style=nextline,nosep]% nosep没有垂直间隔
+	\item[$1] $2
+\end{description}
+endsnippet
+
+context !math(context)
+snippet /list... "带描述的列表" iMA
+\begin{description}[leftmargin=1.3cm,style=nextline,nosep]% nosep没有垂直间隔
+	\item[$1] $2
+\end{description}
+endsnippet
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+1 ` A
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+1 ` A
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list1 "♦" iMA
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#---------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+2 ` A
+\begin{enumerate}[label=*,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+2 ` A
+\begin{enumerate}[label=*,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list2 "*" iMA
+\begin{enumerate}[label=*,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#---------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+3 ` A
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+3 ` A
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list3 "♥" iMA
+\begin{enumerate}[label=$\vardiamondsuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#---------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+4 ` A
+\begin{enumerate}[label=$\rhd$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+4 ` A
+\begin{enumerate}[label=$\rhd$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list4 "右三角" iMA
+\begin{enumerate}[label=$\rhd$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#---------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+5 ` A
+\begin{enumerate}[label=$\varspadesuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+5 ` A
+\begin{enumerate}[label=$\varspadesuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list5 "♣" iMA
+\begin{enumerate}[label=$\varspadesuit$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#--------------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+6 ` A
+\begin{enumerate}[label=$\Diamonddot$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+6 ` A
+\begin{enumerate}[label=$\Diamonddot$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list6 "♦." iMA
+\begin{enumerate}[label=$\Diamonddot$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#--------------------------------------------------
+#---------------------------------------------
+priority 2
+context !math(context)
+snippet `\+6 ` A
+\begin{enumerate}[label=$\Mapsto$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+6 ` A
+\begin{enumerate}[label=$\Mapsto$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list6 "箭头" iMA
+\begin{enumerate}[label=$\Mapsto$,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#--------------------------------------------------
+priority 2
+context !math(context)
+snippet `\+7 ` A
+\begin{enumerate}[label=※,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+7 ` A
+\begin{enumerate}[label=※,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list7 "※" iMA
+\begin{enumerate}[label=※,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+#--------------------------------------------------
+#--------------------------------------------------
+priority 2
+context !math(context)
+snippet `\+8 ` A
+\begin{enumerate}[label=▲,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+priority 3
+context !math(context)
+snippet `\\item \+8 ` A
+\begin{enumerate}[label=▲,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context !math(context)
+snippet /list8 "※" iMA
+\begin{enumerate}[label=▲,nosep]% nosep表示没有垂直间隔
+	\item $1
+\end{enumerate}
+endsnippet
+
+context isBlock(editor)
+snippet /foot "脚注[默认][圆圈]" iMA
+\footnote{$1}
+endsnippet
+
+context isBlock(editor)
+snippet /side "边注[默认]" iMA
+\marginpar{$1}
+endsnippet
+context isBlock(editor)
+
+#----------------------------------------[文字设置]----------------------------------------------
+# /命令设置
+#   盒子
+context isBlock(editor)
+snippet /box "文字盒子默认" iMA
+\framebox[1.10\width]{$1}
+endsnippet
+context isBlock(editor)
+
+context isBlock(editor)
+snippet /bold "加粗" iMA
+\textbf{$1}
+endsnippet
+context isBlock(editor)
+# \verb|laetx真的是| 行内代码
+
+context isBlock(editor)
+snippet /xie "斜体" iMA
+\textit{$1}
+endsnippet
+context isBlock(editor)
+# \verb|laetx真的是| 行内代码
+
+# 这里的强调我们改成了下划线进行显示
+context isBlock(editor)
+snippet /strong "强调" iMA
+\emph{$1}
+endsnippet
+context isBlock(editor)
+
+priority 0
+context isBlock(editor)
+snippet /underline "下划线[普通]" MA
+\underline{$1}
+endsnippet
+context isBlock(editor)
+
+priority 1
+context isBlock(editor)
+snippet /underline1 "下划线[点画线]" iMA
+\dashuline{$1}
+endsnippet
+context isBlock(editor)
+
+context isBlock(editor)
+snippet /waveline "下划曲线" iMA
+\uwave{$1}
+endsnippet
+context isBlock(editor)
+
+context isBlock(editor)
+snippet /dealline "删除线" iMA
+\usout{$1}
+endsnippet
+context isBlock(editor)
+#---------------------------------------·[段落设置]----------------------------------------------------
+
+context isBlock(editor)
+snippet /center "居中" iMA
+\begin{center}
+$1
+\end{center}
+endsnippet
+context isBlock(editor)
+
+#---------------------------------------·[表格设置]----------------------------------------------------
+#### math table
+#
+# table33 ⇨ total table is 4*4
+#       \begin{array}{c|c c c}
+#           ▮ & ▮ & ▮ & ▮ \\ 
+#           \hline
+#           ▮ & ▮ & ▮ & ▮ \\
+#           ▮ & ▮ & ▮ & ▮ \\
+#           ▮ & ▮ & ▮ & ▮ \\
+#       \end{array}
+
+context isBlock(editor)
+context !math(context)
+snippet `/table([1-9])([1-9])` "math table" iA
+``
+    let nrow = m[1];
+    let ncol = m[2];
+    let results = "\\begin{displaymath}\n"
+    results += "\\begin{array}{c|" + "c ".repeat(ncol-1) + "c}";
+    for (let i=0; i<=nrow; i++){
+        results += "\n    ";
+        for(let j = 0;j <=ncol;j++){
+        	results += ((j == ncol) ?  " \\\\\\\\" : " & ");
+        }
+        if (i==0)
+            results += "\n    \\hline";
+    }
+    results += "\n\\end{array}";
+    results += "\n\\end{displaymath}"
+
+    rv = results;
+``
+endsnippet
+
+#--------------------------[数学公式简化]------------------------------------------
+# `//`⇨`\frac{}{}`
+# '1/2' ⇨ '\\frac{1}{2}'
+# __  ⇨ _{}
+# ^^  ⇨ ^{}
+# ... ⇨ \cdots
+# %% ⇨ 快速折叠注释
+
+
+context math(context)
+snippet // "Fraction" iAM
+\\frac{${1:${VISUAL}}}{$2}$0
+endsnippet
+
+snippet `((\d+)|(\d*)(\\)?([A-Za-z!]+)((\^|_)(\{\d+\}|\d))*)/` "Fraction no ()" iAm
+\frac{``rv = m[1]``}{$1}$0
+endsnippet
+
+priority 200
+snippet `(?<=\s)(\\mu|\\alpha|\\sigma|\\rho|\\beta|\\gamma|\\delta|\\zeta|\\eta|\\varepsilon|\\theta|\\iota|\\kappa|\\vartheta|\\lambda|\\nu|\\pi|\\rho|\\tau|\\upsilon|\\phi|\\chi|\\psi|\\omega|\\Gamma|\\Delta|\\Theta|\\Lambda|\\Xi|\\Pi|\\Sigma|\\Upsilon|\\Phi|\\Psi|\\Omega|[A-Za-z]{1,2})?(_[A-Za-z0-9]|_\{[^}]+\})?(\^[A-Za-z0-9]|\^\{[^}]+\})?(_[A-Za-z0-9]|_\{[^}]+\})?(\([^)]+\))(_[A-Za-z0-9]|_\{[^}]+\})?(\^[A-Za-z0-9]|\^\{[^}]+\})?(_[A-Za-z0-9]|_\{[^}]+\})?\/` "Fraction with ()" iAm
+``rv = "\\frac{" + m.slice(1, m.length).join('') + "}{$1}$2"``
+endsnippet
+# ==== Auto Capture Hat Operation ====
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(bar|BAR)` "Bar" iAm
+\overline{``rv = m[1]``}
+endsnippet
+context math(context)
+
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(vec)` "Vector postfix" iAm
+\overrightarrow{``rv = m[1]``}
+endsnippet
+# ==== Auto Capture Hat Operation ====
+
+# ===== Static Hat Operation ====
+priority 2
+context math(context)
+snippet @bar "上画线 \overline{}" iAm
+\overline{$1}$0
+endsnippet
+
+priority 1
+context math(context)
+snippet bar "上画线 \overline{}" iAm
+\overline{$1}$0
+endsnippet
+
+context math(context)
+priority 2
+snippet @sq "\sqrt{}" iAm
+\sqrt{${1}}$0
+endsnippet
+
+context math(context)
+priority 1
+snippet sq "\sqrt{}" iAm
+\sqrt{${1}}$0
+endsnippet
+
+priority 99999
+snippet @ "用来索引数学公式，其中第一个【】如果为1，表示可以去掉跑【@】使用" i
+\sqrt{${1}}$0
+endsnippet
+
+snippet invs "inverse" iAm
+^{-1}
+endsnippet
+
+# @^ ⇨ ^{} 0
+# @_ ⇨ _{} 0
+# ^^ ⇨ ^{} 1
+# __ ⇨ _{} 1
+# @* ⇨ \times
+# ** ⇨ \cdot
+#
+context math(context)
+priority 2
+snippet @^ "^{} 另一种方式是^^" iAm
+^{${1}}$0
+endsnippet
+
+context math(context)
+priority 2
+snippet ^^ "^{} 另一种方式是@^" iAm
+^{${1}}$0
+endsnippet
+
+context math(context)
+priority 2
+snippet @_ "_{} 另一种方式是__" iAm
+_{${1}}$0
+endsnippet
+
+context math(context)
+priority 2
+snippet __ "_{} 另一种方式是@_" iAm
+_{${1}}$0
+endsnippet
+
+context math(context)
+priority 2
+snippet @* "叉乘" iAm
+\times $1
+endsnippet
+
+context math(context)
+priority 2
+snippet ** "点乘" iAm
+\cdot $1
+endsnippet
+
+
+context math(context)
+snippet `([A-Za-z])(\d)` "auto subscript" iAm
+`` rv = m[1] + "_" + m[2]``
+endsnippet
+
+context math(context)
+# Custom: Add more greek letters
+snippet `(\\mu|\\alpha|\\sigma|\\rho|\\beta|\\gamma|\\delta|\\zeta|\\eta|\\varepsilon|\\theta|\\iota|\\kappa|\\vartheta|\\lambda|\\nu|\\pi|\\rho|\\tau|\\upsilon|\\phi|\\chi|\\psi|\\omega|\\Gamma|\\Delta|\\Theta|\\Lambda|\\Xi|\\Pi|\\Sigma|\\Upsilon|\\Phi|\\Psi|\\Omega)([a-z])\2` "auto subscript for greek letter" iAm
+`` rv = m[1] + "_" + m[2].substring(0, 1) ``
+endsnippet
+
+context math(context)
+snippet `(\\mu|\\alpha|\\sigma|\\rho|\\beta|\\gamma|\\delta|\\zeta|\\eta|\\varepsilon|\\theta|\\iota|\\kappa|\\vartheta|\\lambda|\\nu|\\pi|\\rho|\\tau|\\upsilon|\\phi|\\chi|\\psi|\\omega|\\Gamma|\\Delta|\\Theta|\\Lambda|\\Xi|\\Pi|\\Sigma|\\Upsilon|\\Phi|\\Psi|\\Omega)S([a-z])\2` "auto subscript for greek letter" iAm
+`` rv = m[1] + "_{${1:" + m[2].substring(0, 1) + "}}$2"``
+endsnippet
+
+# == Font Operation ==
+# ==== Static Operation ====
+
+context math(context)
+snippet @txt "公式中插入文字" iAm
+\text{$1}$0
+endsnippet
+context math(context)
+snippet txt "公式中插入文字" iAm
+\text{$1}$0
+endsnippet
+
+context math(context)
+snippet @tit "公式中插入文字【斜体】" iAm
+\textit{$1}$0
+endsnippet
+context math(context)
+snippet tit "公式中插入文字【斜体】" iAm
+\textit{$1}$0
+endsnippet
+
+context math(context)
+snippet @mcal "mathcal" im
+\mathcal{$1}$0
+endsnippet
+
+context math(context)
+snippet mcal "mathcal" im
+\mathcal{$1}$0
+endsnippet
+
+context math(context)
+snippet @mbb "mathbb" iAm
+\mathbb{$1}$0
+endsnippet
+
+context math(context)
+snippet mbb "mathbb" iAm
+\mathbb{$1}$0
+endsnippet
+
+context math(context)
+snippet @mbf "mathbf" iAm
+\mathbf{$1}$0
+endsnippet
+
+context math(context)
+snippet mbf "mathbf" iAm
+\mathbf{$1}$0
+endsnippet
+
+context math(context)
+snippet @mbm "mathbm" iAm
+\mathbm{$1}$0
+endsnippet
+
+context math(context)
+snippet mbm "mathbm" iAm
+\mathbm{$1}$0
+endsnippet
+
+context math(context)
+snippet TT "R" iAm
+^{\mathrm{T}}
+endsnippet
+
+context math(context)
+snippet RR "R" iAm
+\mathbb{R}
+endsnippet
+
+context math(context)
+snippet NN "N" iAm
+\mathbb{N}
+endsnippet
+
+context math(context)
+snippet ZZ "Z" iAm
+\mathbb{Z}
+endsnippet
+
+context math(context)
+snippet QQ "Q" iAm
+\mathbb{Q}
+endsnippet
+
+context math(context)
+snippet CC "C" iAm
+\mathbb{C}
+endsnippet
+
+context math(context)
+snippet @TT "R" iAm
+^{\mathrm{T}}
+endsnippet
+
+context math(context)
+snippet @RR "R" iAm
+\mathbb{R}
+endsnippet
+
+context math(context)
+snippet @NN "N" iAm
+\mathbb{N}
+endsnippet
+
+context math(context)
+snippet @ZZ "Z" iAm
+\mathbb{Z}
+endsnippet
+
+context math(context)
+snippet @QQ "Q" iAm
+\mathbb{Q}
+endsnippet
+
+context math(context)
+snippet @CC "C" iAm
+\mathbb{C}
+endsnippet
+# ==== Dynamic Operation ====
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(bf|BF)` "mathbf" iAm
+\mathbf{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(bm|BM)` "mathbm" iAm
+\bm{``rv = m[1]``}
+endsnippet
+
+context math(context)
+snippet 1bm "1bm" iAm
+\bm{1}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(bs)` "boldsymbol" iAm
+\boldsymbol{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(sf)` "mathsf" iAm
+\mathsf{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)(frak)` "mathfrak" iAm
+\mathfrak{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)cal` "mathcal" iAm
+\mathcal{``rv = m[1].toUpperCase()``}$0
+endsnippet
+
+priority 100
+context math(context)
+snippet `(?<!\\)\b([a-zA-Z]+)rm` "mathrm" iAm
+\mathrm{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(?<!\\)\b([a-zA-Z]+)opn` "operatorname" iAm
+\operatorname{``rv = m[1]``}
+endsnippet
+
+priority 100
+context math(context)
+snippet `(\\?[a-zA-Z]\w*({?\w*})?)bb` iAm
+\mathbb{``rv = m[1]``}$0
+endsnippet
+
+
+# == Auto Symbol ==
+context math(context)
+snippet oo "\infty" iAmm
+\infty
+endsnippet
+
+context math(context)
+snippet ... "cdots" iAm
+\cdots 
+endsnippet
+
+context math(context)
+snippet <> "hokje" iA
+\diamond 
+endsnippet
+
+# +... -> , \cdots
+# -  ... -> , \cdots
+# add a space if there already is one.
+priority 101
+context math(context)
+snippet `(?<=[-+])\s*\.\.\.` "smart cdots" imA
+ \cdots 
+endsnippet
+
+# It seems that \ldots is only used when , ..., 
+# ,... -> , \ldots
+# ,  ... -> , \ldots
+priority 101
+context math(context)
+snippet `(?<=,)(\s*)\.\.\.` "smart ldots" imA
+ \ldots 
+endsnippet
+
+context math(context)
+snippet ** "dot multiply" iAm
+\cdot 
+endsnippet
+
+context math(context)
+snippet odot "odot" iAm
+\odot 
+endsnippet
+
+priority 101
+context math(context)
+snippet xx "cross" iAm
+\times 
+endsnippet
+
+context math(context)
+snippet eps "epsilon" iAm
+\epsilon
+endsnippet
+
+context math(context)
+snippet @eps "集合属于" iAm
+\epsilon
+endsnippet
+
+priority 100
+context math(context)
+snippet ell "ell" iAm
+\ell
+endsnippet
+
+priority 100
+context math(context)
+snippet log "log" iAm
+\log
+endsnippet
+
+context math(context)
+snippet `(?<!\\)(oint|iiint|iint|int)` "integrate" iAm
+\\``rv = m[1]``{$1}\mathrm{d}x 
+endsnippet
+
+context math(context)
+snippet `(?<!\\)(sum|min|max|argmin|argmax|sup|inf)` "sum|min|max|argmin|argmax|sup|inf" iAm
+\\``rv = m[1]``_{$1}
+endsnippet
+
+context math(context)
+snippet `(?<!\\)(sin|cos|arccot|cot|csc|ln|exp|det|perp|arcsin|arccos|arctan|arccot|arccsc|arcsec|ell|nabla|notin|not)` "function" iAm
+\\``rv = m[1]`` 
+endsnippet
+
+context math(context)
+snippet `(?<!\\)(mu|alpha|sigma|rho|beta|gamma|delta|pi|zeta|eta|varepsilon|theta|iota|kappa|vartheta|lambda|nu|pi|rho|tau|upsilon|varphi|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)` "greek" iAm
+\\``rv = m[1]``
+endsnippet
+
+# ==== Space Symbol ====
+context math(context)
+snippet `(?<!\\)(quad)` "ln" iAm
+\\``rv = m[1]+" "`` 
+endsnippet
+
+context math(context)
+snippet `(?<!\\)(@-)(\d)` "ln" iAm
+\\hspace{``rv = "0."+m[2]+"cm} "`` 
+endsnippet
+# latex记得补充换行
+# ==== Logic Symbol ====
+
+context math(context)
+snippet empty "empty" iAm
+\empty
+endsnippet
+
+context math(context)
+priority 200
+snippet inn "in" iAm
+\in 
+endsnippet
+
+context math(context)
+snippet `\\ln ot` "in" iAm
+\lnot 
+endsnippet
+
+context math(context)
+snippet sse "subseteq" iAm
+\subseteq 
+endsnippet
+
+context math(context)
+snippet @sse "集合属于" iAm
+\subseteq 
+endsnippet
+
+
+context math(context)
+snippet tto "to" iAm
+\to 
+endsnippet
+
+priority 200
+context math(context)
+snippet `(?<=\b|\d+)(?<!\\)(cap|cup|land|lor|lnot|oplus|ominus|otimes|sqcap|sqcup|vdash|models)` "logic operator" iAm
+\\``rv = m[1]`` 
+endsnippet
+
+priority 200
+context math(context)
+snippet `(?<=\b|\d+)(?<!\\)(bot|top|dagger)` "logic symbols" iAm
+\\``rv = m[1]``
+endsnippet
+
+context math(context)
+snippet -> "to" iAm
+\to 
+endsnippet
+
+context math(context)
+snippet |> "mapsto" iAm
+\mapsto 
+endsnippet
+
+context math(context)
+snippet => "implies" iAm
+\implies
+endsnippet
+
+context math(context)
+snippet =< "implied by" iAm
+\impliedby
+endsnippet
+
+priority 200
+context math(context)
+snippet iff "if and only if" iAm
+\iff
+endsnippet
+
+context math(context)
+snippet EE "exist" iAm
+\exists 
+endsnippet
+
+context math(context)
+snippet AA "forall" iAm
+\forall 
+endsnippet
+
+context math(context)
+snippet for "because" iAm
+\because 
+endsnippet
+
+context math(context)
+snippet so "therefore" iAm
+\therefore 
+endsnippet
+
+
+# ==== Possibility Symbol ====
+context math(context)
+snippet Pr "Pr" iAm
+\operatorname{Pr}
+endsnippet
+
+context math(context)
+snippet Var "Var" iAm
+\operatorname{Var}
+endsnippet
+
+context math(context)
+snippet Cov "Cov" iAm
+\operatorname{Cov}
+endsnippet
+
+context math(context)
+snippet Exp "Expected" iAm
+\mathbb{E}
+endsnippet
+
+
+# ==== Compare Symbol ====
+context math(context)
+snippet || "setminus" iAm
+\setminus``rv=" "`` 
+endsnippet
+
+context math(context)
+snippet >= "greater than" iAm
+\ge $0
+endsnippet
+
+context math(context)
+snippet dis "displaystyle" iAm
+\displaystyle 
+endsnippet
+
+context math(context)
+snippet <= "less than" iAm
+\le $0
+endsnippet
+
+context math(context)
+snippet != "no equals" iAm
+\neq 
+endsnippet
+
+context math(context)
+snippet == " constan equals" iAm
+\equiv 
+endsnippet
+
+context math(context)
+snippet sim " sim" iAm
+\sim 
+endsnippet
+
+context math(context)
+snippet ~~ " Amppro equals" iAm
+\thickapprox 
+endsnippet
+
+context math(context)
+snippet ~= " Amppro equals2" iAm
+\cong
+endsnippet
+
+context math(context)
+snippet >> ">>" iAm
+\gg
+endsnippet
+
+context math(context)
+snippet << "<<" iAm
+\ll
+endsnippet
+
+
+# == Auto Environment ==
+
+# ==== Auto Math Mode ====
+# ==== Common Environment ====
+context math(context)
+snippet case "cases" iAm
+\begin{cases}
+	$1 \\\\
+\end{cases}
+endsnippet
+
+context math(context)
+snippet aligned "aligned" iAm
+\begin{aligned}
+$1 \\\\
+\end{aligned}
+endsnippet
+
+# ==== Common Environment ====
+context math(context)
+snippet @case "cases" iAm
+\begin{cases}
+	$1 \\\\
+\end{cases}
+endsnippet
+
+context math(context)
+snippet @aligned "aligned" iAm
+\begin{aligned}
+$1 \\\\
+\end{aligned}
+endsnippet
+
+# ==== Common Environment ====
+context math(context)
+snippet /case "cases" iAm
+\begin{cases}
+	$1 \\\\
+\end{cases}
+endsnippet
+
+context math(context)
+snippet /aligned "aligned" iAm
+\begin{aligned}
+$1 \\\\
+\end{aligned}
+endsnippet
+# == Auto Adaptive Close ==
+
+context math(context)
+snippet ceil "ceil" iAm
+\left\lceil $1 \right\rceil $0
+endsnippet
+
+context math(context)
+snippet floor "floor" iAm
+\left\lfloor $1 \right\rfloor$0
+endsnippet
+
+priority 100
+context math(context)
+snippet @( "left( right)" Aim
+\left( ${1} \right) $0
+endsnippet
+
+priority 100
+context math(context)
+snippet @| "left| right|" Aim
+\left| ${1} \right| $0
+endsnippet
+
+priority 100
+context math(context)
+snippet @{ "left\{ right\}" Aim
+\left\\{ ${1} \right\\} $0
+endsnippet
+
+priority 100
+context math(context)
+snippet set "\{ \}" Aim
+\\{ ${1} \\}$0
+endsnippet
+
+priority 100
+context math(context)
+snippet @[ "left[ right]" Aim
+\left[ ${1} \right] $0
+endsnippet
+
+priority 100
+context math(context)
+snippet @< "leftangle rightangle" iAm
+\left<${1} \right>$0
+endsnippet
+
+priority 200
+context math(context)
+snippet norm iAm
+\left\| ${1} \right\|_{$2}$3
+endsnippet
+
+priority 200
+context math(context)
+snippet @norm "||||" iAm
+\left\| ${1} \right\|_{$2}$3
+endsnippet
+# == Snippet ==
+
+# ==== General Snippet ====
+
+# ====== Lite Snippet ======
+context math(context)
+snippet tag "tag" iAm
+\tag{$1}
+endsnippet
+
+context math(context)
+snippet @xy "Auto (x, y)" iAm
+(x, y)
+endsnippet
+
+priority 100
+context math(context)
+snippet @zxy "Auto (x, y ,z)" iAm
+(x, y, z)
+endsnippet
+
+priority 200
+context math(context)
+snippet abs "absolute value" iAm
+\left\vert ${1} \right\vert $0
+endsnippet
+
+# ======== N Series ========
+
+priority 100
+context math(context)
+snippet comma "comma" iAm
+${1:\\alpha}_1,${1:\\alpha}_2,\\cdots,${1:\\alpha}_${2:n}
+endsnippet
+
+priority 100
+context math(context)
+snippet plus "plus" iAm
+${1:k}_1${2:\\alpha}_1+${1:k}_2${2:\\alpha}_2+\\cdots+${1:k}_${3:n}${2:\\alpha}_${3:n}
+endsnippet
+
+context math(context)
+snippet `\b([ijk])=n` "i=1,2,\cdots,n" iAm
+``rv = m[1]``=1,2,\cdots,n
+endsnippet
+
+# ======== Common Operator Snippet ========
+context math(context)
+snippet taylor "taylor" iAm
+\sum_{${1:k}=${2:0}}^{${3:\infty}} ${4:c_$1} (x-a)^$1 $0
+endsnippet
+
+context math(context)
+snippet `(?<!\\)lim` "limit" iAm
+\lim_{${1:n} \to ${2:\infty}}
+endsnippet
+
+context math(context)
+snippet `(?<!\\)prod` "product" iAm
+\prod_{${1:n=${2:1}}}^{${3:\infty}} ${4:${VISUAL}}$0
+endsnippet
+
+context math(context)
+snippet `(?<!\\)part` "d/dx" iAm
+\frac{\partial ${1:V}}{\partial ${2:x}}$0
+endsnippet
+
+priority 300
+context math(context)
+snippet `(?<!\\)diff` "d/dx" iAm
+\frac{\mathrm{d}${1:y}}{\mathrm{d}${2:x}}$0
+endsnippet
+
+priority 300
+context math(context)
+snippet `dd` "dd" iAm
+\mathrm{d}{$1}
+endsnippet
+
+priority 300
+context math(context)
+snippet DD "DD" iAm
+\frac{\mathrm{d}{$1}}{\mathrm{d}{$2}}$0
+endsnippet
+
+priority 300
+context math(context)
+snippet `pp` "pp" iAm
+\partial{$1}$0
+endsnippet
+
+priority 300
+context math(context)
+snippet PP "PP" iAm
+\frac{\partial{$1}}{\partial{$2}}$0
+endsnippet
+
+context math(context)
+snippet buu "bigcup" iAm
+\bigcup_{${1:i \in ${2: I}}} $0
+endsnippet
+
+context math(context)
+snippet bnn "bigcap" iAm
+\bigcap_{${1:i \in ${2: I}}} $0
+endsnippet
+
+context math(context)
+priority 100
+snippet dint "integral" iAm
+\int_{${1:-\infty}}^{${2:\infty}} ${3} \\mathrm{d}${4:x}$0
+endsnippet
+
+context math(context)
+priority 200
+snippet `c(o|n)?(l|n)?(b|c)?int` "s 	egral" iAm
+``
+let final = "\\"; // init
+let isO = m[1] == "o";
+(isO) ? final += "o" : "" // o option
+let b = 1;
+let isL = m[2] == "l";
+(m[3] == 'b') ? b = 2 : (m[3] == 'c') ? b = 3 : 1;
+for (let i = 0; i < b - 1; i++) {
+final += "i";
+}
+final += "int";
+final += ((b >= 2) || (b != 1 && !isO && isL)) ? "\\limits" : "";
+let r = (b == 3) ? "E" : (b == 1 && (isL || isO)) ? "C" : "R";
+final += ((b >= 2) || isO || (b == 1 && isL)) ? "_{${1:" + r + "}}" : "_{${1:-\\infty}}^{${2:\\infty}}";
+let x = (b == 2) ? "A" : (b == 3) ? "V" : (b == 1 && isL) ? "s" : "x";
+final += " ${3} \\mathrm{d}${4:" + x + "}$0";
+rv = final;
+``
+endsnippet
+
+context math(context)
+# Custom: Can add more defined operator
+priority 100
+snippet `(?<![\a-zA-Z])(rank|lcm|gcd|atan2|softmax|tr|trace|diag|sign|const)` "math function" iAm
+\\operatorname{``rv = m[1]``}
+endsnippet
+
+# ==== Static Matrix ====
+context math(context)
+snippet pmat "pmat" wm
+\begin{pmatrix} 
+    ${1: } 
+\end{pmatrix} $0
+endsnippet
+
+context math(context)
+snippet bmat "pmat" wm
+\begin{bmatrix} 
+    $1 
+\end{bmatrix} $0
+endsnippet
+
+context math(context)
+snippet vecC "column vector" iAm
+\begin{pmatrix} ${1:x}_1 \\\\ ${1:x}_2 \\\\ \vdots \\\\ ${1:x}_${2:n} \end{pmatrix}
+endsnippet
+
+context math(context)
+snippet vecR "row vector" iAm
+\begin{pmatrix} ${1:x}_1, ${1:x}_2, \cdots, ${1:x}_${2:n} \end{pmatrix}$0
+endsnippet
+
+priority 300
+context math(context)
+snippet omis "omission" iAm
+\\begin{pmatrix}${1:1}&${2:1}&\\cdots&${4:1}\\\\${5:1}&${6:1}&\\cdots&${8:1}\\\\\\vdots&\\vdots&\\ddots&\\vdots\\\\${13:1}&${14:1}&\\cdots&${16:1}\\end{pmatrix}
+endsnippet
+
+priority 300
+context math(context)
+snippet submat "omission" iAm
+\\begin{pmatrix}
+    ${1:a}_{11} & ${1:a}_{12} & \\cdots & ${1:a}_{1n} \\\\
+    ${1:a}_{21} & ${1:a}_{22} & \\cdots & ${1:a}_{2n} \\\\
+    \\vdots & \\vdots & \\ddots & \\vdots \\\\
+    ${1:a}_{n1} & ${1:a}_{n2} & \\cdots & ${1:a}_{nn}
+\\end{pmatrix}
+endsnippet
+
+priority 300
+snippet subplusmat "omission" iAm
+\\begin{pmatrix}
+    ${1:a}_{11}+${2:b}_{11} & ${1:a}_{12}+${2:b}_{12} & \\cdots & ${1:a}_{1n}+${2:b}_{1n} \\\\
+    ${1:a}_{21}+${2:b}_{21} & ${1:a}_{22}+${2:b}_{22} & \\cdots & ${1:a}_{2n}+${2:b}_{2n} \\\\
+    \\vdots & \\vdots & \\ddots & \\vdots \\\\
+    ${1:a}_{n1}+${2:b}_{n1} & ${1:a}_{n2}+${2:b}_{n2} & \\cdots & ${1:a}_{nn}+${2:b}_{nn}
+\\end{pmatrix}
+endsnippet
+
+snippet jacobi "jacobi" iAm
+\\begin{pmatrix}\\frac{\\partial ${1:f}_1}{\\partial ${2:x}_1}&\\frac{\\partial ${1:f}_1}{\\partial ${2:x}_2}&\\cdots&\\frac{\\partial ${1:f}_1}{\\partial ${2:x}_${3:n}}\\\\\\frac{\\partial ${1:f}_2}{\\partial ${2:x}_1}&\\frac{\\partial ${1:f}_2}{\\partial ${2:x}_2}&\\cdots&\\frac{\\partial ${1:f}_2}{\\partial ${2:x}_${3:n}}\\\\\\vdots&\\vdots&\\ddots&\\vdots\\\\\\frac{\\partial ${1:f}_${3:m}}{\\partial ${2:x}_1}&\\frac{\\partial ${1:f}_${3:m}}{\\partial ${2:x}_2}&\\cdots&\\frac{\\partial ${1:f}_${3:m}}{\\partial ${2:x}_${3:n}}\\end{pmatrix}
+endsnippet
+
+# ==== Dynamic Matrix ====
+
+priority 300
+snippet `(b|p|v)mata([1-9])` "bmatrix" iiAm
+\\begin{``rv = m[1]``matrix}``
+	let len = m[2];
+	let results = "";
+	for (var i=0; i<len; i++){
+		results += "$1 &".repeat(len-1) + " $1 \\\\\\\\";
+	}
+	rv = results;
+``\\end{``rv = m[1]``matrix}$0
+endsnippet
+
+priority 300
+snippet `(b|p|v)mat([1-9])` "bmatrix" iiAm
+\\begin{``rv = m[1]``matrix}``
+	rv = gen_matrix(m[2],m[2]);
+``\\end{``rv = m[1]``matrix}$0
+endsnippet
+
+priority 2000
+snippet `(b|p|v)matr([1-9]{1})` "bmatrix" iiAm
+\\begin{``rv = m[1]``matrix}``
+	rv = gen_matrix_transposed(m[2],m[2]);
+``\\end{``rv = m[1]``matrix}$0
+endsnippet
+
+priority 300
+snippet `vec([1-9])` "col vector" iiAm
+\\begin{pmatrix}``
+    rv = gen_matrix(m[1], 1);
+``\\end{pmatrix}$0
+endsnippet
+
+priority 300
+snippet `vecr([1-9])` "row vector" iiAm
+\\begin{pmatrix}``
+    rv = gen_matrix(1, m[1]);
+``\\end{pmatrix}$0
+endsnippet
+
+
+# == General ==
+
+snippet \box "Box" 
+``rv = '┌' + '─'.repeat(t[0].length + 2) + '┐'``
+│ $1 │
+``rv = '└' + '─'.repeat(t[0].length + 2) + '┘'``
+endsnippet
+
+
+priority 300
+snippet `table(\d)(\d)` "create table with rows and columns" wA
+``
+rv = createTable(m[1], m[2]);
+``
+endsnippet
+
+# ￥ ⇨ $ $
+context !isMathOk(editor)
+snippet ￥ A
+\$$1\$
+endsnippet
+
+context !isMathOk(editor)
+snippet `([^ ]+)(\￥)` "$公式补全" A
+``rv =m[1]``\$$1\$
+endsnippet
+
+
+# $ ⇨ $ $
+# $$$⇨ $$$$
+context !isMathOk(editor)
+snippet $ A
+\$$1\$
+endsnippet
+
+context !isMathOk(editor)
+snippet `([^ ]+)(\$)` "$公式补全" A
+``rv =m[1]``\$$1\$
+endsnippet
+
+snippet @@ iMA
+C:\Users\Administrator\AppData\Roaming\Code\User\hsnips
+endsnippet
