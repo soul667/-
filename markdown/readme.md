@@ -13,14 +13,16 @@
 ### Fraction Match(分式匹配)
 + `//`⇨`\frac{}{}`
 + `1/` ⇨ `\\frac{1}{}`
-### Auto Capture Hat Operation
+### Auto Capture 
 注意必须在数学环境中
 + `bar`  $a \to \overline{a}$
 + `vec`  $a \to \overrightarrow{a}$
 ### `@`环境
 > 后面加`1`的表示可以去掉`@`使用,如果冲突，可以自行修改，去掉后面的片段定义。
-+ `@sq` ⇨ $\sqrt{a}$ `\sqrt{}` `1`
-+ `@bar` ⇨ $\overline{a}$ `\overline{}`  `1`
++ `@sq` ⇨`\sqrt{}` `1`
++ `@bar` ⇨ `\overline{}`  `1`
 + `@^` ⇨ `^{}`  `0` | `^^` ⇨ `^{} 1`
 + `@_` ⇨ `_{}`  `0` | `__` ⇨ `_{} 1`
 + `@*` ⇨ $\times$ `\times`  `0` [`but`] `**` ⇨ $\cdot$ ` \cdot`
++ `@txt` ⇨ `\text{}`  `1`
++ 
